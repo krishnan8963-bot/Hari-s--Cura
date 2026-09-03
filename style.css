@@ -96,6 +96,9 @@ body.no-animations *, body.no-animations *::before, body.no-animations *::after 
 }
 
 * { box-sizing: border-box; }
+/* Make sure anything hidden via the `hidden` attribute actually disappears,
+   even when a component's own CSS sets display:flex/block for layout. */
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
   margin: 0;
