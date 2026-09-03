@@ -873,7 +873,39 @@ async function loadAllData() {
   State.settings = await DB.Settings.getAll();
 }
 
-async function init() {
+async function init() 
+
+/**
+ * Asks the browser to flag this site's storage as "persistent," which
+ * protects IndexedDB from automatic eviction under low-disk-space pressure
+ * (this is the main way phones silently clear web app data). This is a
+ * request, not a guarantee — browsers decide based on factors like how
+ * often you use the site (installed PWAs and frequently visited sites are
+ * far more likely to be granted persistence). Regular backups (More > Data)
+ * remain the only fully reliable protection.
+ */
+async function setupPersistentStorage() {
+  const note = document.getElementById('storage-persist-note');
+  if (!(navigator.storage && navigator.storage.persist)) {
+    if (note) note.textContent = "Persistent storage isn't supported in this browser — regular backups are recommended.";
+    return;
+  }
+  try {
+    let granted = await navigator.storage.persisted();
+    if (!granted) {
+      granted = await navigator.storage.persist();
+    }
+    if (note) {
+      note.textContent = granted
+        ? '✅ Persistent storage is enabled — your browser will avoid automatically clearing this data under low storage.'
+        : "Persistent storage wasn't granted by your browser. Your data could still be cleared automatically under low storage — regular backups are recommended.";
+    }
+  } catch (e) {
+    console.warn('Persistent storage request failed', e);
+    if (note) note.textContent = 'Could not determine storage protection status.';
+  }
+}
+{
   await loadAllData();
   applyTheme();
   applyAnimationSetting();
@@ -893,6 +925,7 @@ async function init() {
 
   setupEventListeners();
   renderCurrentScreen();
+  setupPersistentStorage();
   setInterval(() => {
     // Re-check carry-forward and refresh greeting when the date rolls over.
     if (State.currentScreen === 'today') updateGreeting();
@@ -1404,7 +1437,12 @@ function setupInstallBannerHandlers() {
   document.getElementById('install-accept-btn').addEventListener('click', async () => {
     const promptEvent = State.deferredInstallPrompt;
     document.getElementById('install-banner').hidden = true;
-    if (!promptEvent) return;
+    if (!promptEvent) ret
+       
+     
+     
+     
+     urn;
     promptEvent.prompt();
     await promptEvent.userChoice;
     State.deferredInstallPrompt = null;
