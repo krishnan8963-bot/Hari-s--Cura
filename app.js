@@ -873,7 +873,32 @@ async function loadAllData() {
   State.settings = await DB.Settings.getAll();
 }
 
-async function init() 
+async function init() {
+  await loadAllData();
+  applyTheme();
+  applyAnimationSetting();
+
+  if (!State.settings.onboarded) {
+    await seedSampleData();
+    await loadAllData();
+    showWelcomeScreen();
+  } else {
+    showAppShell();
+  }
+
+  const movedCount = await TaskLogic.runAutoCarryForward();
+  if (movedCount > 0) await loadAllData();
+
+  Notifications.scheduleAll(State.tasks, State.settings);
+
+  setupEventListeners();
+  renderCurrentScreen();
+  setupPersistentStorage();
+  setInterval(() => {
+    // Re-check carry-forward and refresh greeting when the date rolls over.
+    if (State.currentScreen === 'today') updateGreeting();
+  }, 60000);
+}
 
 /**
  * Asks the browser to flag this site's storage as "persistent," which
@@ -904,32 +929,6 @@ async function setupPersistentStorage() {
     console.warn('Persistent storage request failed', e);
     if (note) note.textContent = 'Could not determine storage protection status.';
   }
-}
-{
-  await loadAllData();
-  applyTheme();
-  applyAnimationSetting();
-
-  if (!State.settings.onboarded) {
-    await seedSampleData();
-    await loadAllData();
-    showWelcomeScreen();
-  } else {
-    showAppShell();
-  }
-
-  const movedCount = await TaskLogic.runAutoCarryForward();
-  if (movedCount > 0) await loadAllData();
-
-  Notifications.scheduleAll(State.tasks, State.settings);
-
-  setupEventListeners();
-  renderCurrentScreen();
-  setupPersistentStorage();
-  setInterval(() => {
-    // Re-check carry-forward and refresh greeting when the date rolls over.
-    if (State.currentScreen === 'today') updateGreeting();
-  }, 60000);
 }
 
 async function seedSampleData() {
@@ -1437,12 +1436,7 @@ function setupInstallBannerHandlers() {
   document.getElementById('install-accept-btn').addEventListener('click', async () => {
     const promptEvent = State.deferredInstallPrompt;
     document.getElementById('install-banner').hidden = true;
-    if (!promptEvent) ret
-       
-     
-     
-     
-     urn;
+    if (!promptEvent) return;
     promptEvent.prompt();
     await promptEvent.userChoice;
     State.deferredInstallPrompt = null;
