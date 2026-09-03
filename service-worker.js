@@ -12,7 +12,26 @@
  *    doesn't need to intercept.
  */
 
-const CACHE_NAME = 'haris-cura-v1';
+/**
+ * service-worker.js — Offline app-shell caching for Hari's Cura.
+ *
+ * Strategy: network-first, cache as a fallback.
+ *  - Every GET request for an app-shell file first tries the network, so
+ *    the app always picks up the latest deployed code when you're online.
+ *  - The successful response is also stored in the cache, so if you go
+ *    offline later, the app still loads from that last-known-good copy.
+ *  - IndexedDB (all task/shopping/settings data) is NOT touched here —
+ *    it lives entirely in the page's IndexedDB, which the service worker
+ *    doesn't need to intercept.
+ *
+ * IMPORTANT: bump CACHE_NAME (e.g. 'haris-cura-v3') any time you want to
+ * force every device to fully discard its old cache on next load. This
+ * isn't required for normal code updates (network-first already picks
+ * those up automatically while online) — it's a manual "just in case"
+ * reset button for stuck devices.
+ */
+
+const CACHE_NAME = 'haris-cura-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -52,32 +71,22 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // don't intercept cross-origin (e.g. Google Fonts)
 
-  // Navigation requests: try network first so updates land quickly, fall back to cached shell offline.
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', clone));
-          return response;
-        })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
-  }
-
-  // Everything else in the app shell: cache-first, then network, then cache the result.
+  // Network-first for every app-shell request: always try to get the
+  // freshest deployed file first. Only fall back to whatever's cached
+  // (or, for a full-page navigation, the cached index.html) when the
+  // network request fails — i.e. when actually offline.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
+    fetch(request)
+      .then((response) => {
         if (response && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
-      }).catch(() => cached);
-    })
+      })
+      .catch(() =>
+        caches.match(request).then((cached) => cached || (request.mode === 'navigate' ? caches.match('./index.html') : undefined))
+      )
   );
 });
 
