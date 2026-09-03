@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Hari's Cura — Smart Personal Planner</title>
+<meta name="description" content="A calm, premium personal planner for your tasks, days, and shopping lists. Works offline. Your data stays on your device." />
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#4F46E5" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#14151C" media="(prefers-color-scheme: dark)" />
+<link rel="icon" href="./icons/icon-64.png" />
+<link rel="apple-touch-icon" href="./icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Hari's Cura" />
+
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<!-- ================= WELCOME / FIRST RUN ================= -->
+<section id="welcome-screen" class="welcome-screen" aria-labelledby="welcome-title" hidden>
+  <div class="welcome-content">
+    <div class="welcome-logo" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="64" height="64">
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#4F46E5"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <rect width="64" height="64" rx="16" fill="url(#logoGrad)"/>
+        <text x="32" y="42" text-anchor="middle" font-family="'Poppins',sans-serif" font-weight="700" font-size="30" fill="#fff">H</text>
+        <circle cx="47" cy="47" r="9" fill="#10B981"/>
+        <path d="M43 47.5l2.6 2.6 5-5.4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 id="welcome-title">Welcome to Hari's Cura 👋</h1>
+    <p class="welcome-tagline">Plan your day. Stay on track. Get things done.</p>
+    <button id="welcome-start-btn" class="btn btn-primary btn-lg" type="button">Let's get started</button>
+    <p class="welcome-footnote">No account. No sign-up. Your data stays on this device.</p>
+  </div>
+</section>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app-shell" class="app-shell" hidden>
+
+  <!-- Desktop sidebar -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-brand">
+      <span class="brand-mark" aria-hidden="true">H</span>
+      <span class="brand-name">Hari's Cura</span>
+    </div>
+    <button class="sidebar-add-btn" id="sidebar-add-btn" type="button">
+      <span class="icon-plus" aria-hidden="true">+</span> Add task
+    </button>
+    <ul class="sidebar-nav-list" role="list">
+      <li><button class="nav-item" data-screen="today" type="button"><span class="nav-icon" aria-hidden="true">☀️</span><span>Today</span></button></li>
+      <li><button class="nav-item" data-screen="planner" type="button"><span class="nav-icon" aria-hidden="true">🗓️</span><span>Planner</span></button></li>
+      <li><button class="nav-item" data-screen="buy" type="button"><span class="nav-icon" aria-hidden="true">🛒</span><span>Buy</span></button></li>
+      <li><button class="nav-item" data-screen="stats" type="button"><span class="nav-icon" aria-hidden="true">📊</span><span>Stats</span></button></li>
+      <li><button class="nav-item" data-screen="more" type="button"><span class="nav-icon" aria-hidden="true">⚙️</span><span>More</span></button></li>
+    </ul>
+    <div class="sidebar-footer">
+      <p>Your data stays on this device.</p>
+    </div>
+  </nav>
+
+  <!-- Main content area -->
+  <main class="main-content" id="main-content">
+
+    <!-- ============ TODAY ============ -->
+    <section class="screen" id="screen-today" data-screen="today" aria-label="Today">
+      <header class="today-header">
+        <div>
+          <p class="greeting" id="greeting-text">Good Morning 👋</p>
+          <h1 class="today-date" id="today-date-text">—</h1>
+        </div>
+        <button class="icon-btn search-toggle" id="open-search-btn" type="button" aria-label="Search tasks">🔍</button>
+      </header>
+
+      <div class="progress-hero card" id="progress-hero">
+        <div class="progress-ring-wrap">
+          <svg class="progress-ring" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">
+            <circle class="progress-ring-track" cx="60" cy="60" r="52" />
+            <circle class="progress-ring-fill" id="progress-ring-fill" cx="60" cy="60" r="52" />
+          </svg>
+          <div class="progress-ring-label">
+            <span id="progress-percent-text">0%</span>
+          </div>
+        </div>
+        <div class="progress-hero-text">
+          <p class="progress-hero-count" id="progress-count-text">Nothing planned</p>
+          <p class="progress-hero-caption" id="progress-caption-text">Add your first task to get started.</p>
+        </div>
+      </div>
+
+      <div class="filter-bar" id="today-filter-bar">
+        <button class="chip is-active" data-filter="all" type="button">All</button>
+        <button class="chip" data-filter="pending" type="button">Pending</button>
+        <button class="chip" data-filter="completed" type="button">Completed</button>
+        <button class="chip" data-filter="overdue" type="button">Overdue</button>
+        <button class="chip" data-filter="carried" type="button">Carried Forward</button>
+        <button class="chip" data-filter="high" type="button">High Priority</button>
+      </div>
+
+      <div id="today-task-groups" class="task-groups"></div>
+      <div id="today-empty-state" class="empty-state" hidden>
+        <p class="empty-emoji">✨</p>
+        <h3>Your day is clear</h3>
+        <p>No tasks planned for today.</p>
+        <button class="btn btn-primary" type="button" data-action="open-add-task">+ Add Task</button>
+      </div>
+    </section>
+
+    <!-- ============ PLANNER ============ -->
+    <section class="screen" id="screen-planner" data-screen="planner" aria-label="Planner" hidden>
+      <header class="screen-header">
+        <h1>Planner</h1>
+      </header>
+
+      <div class="tabs" role="tablist" aria-label="Planner view">
+        <button class="tab is-active" role="tab" data-view="day" type="button">Day</button>
+        <button class="tab" role="tab" data-view="week" type="button">Week</button>
+        <button class="tab" role="tab" data-view="month" type="button">Month</button>
+        <button class="tab" role="tab" data-view="year" type="button">Year</button>
+      </div>
+
+      <!-- Day view -->
+      <div class="planner-view" id="view-day">
+        <div class="date-nav">
+          <button class="icon-btn" id="day-prev-btn" type="button" aria-label="Previous day">‹</button>
+          <div class="date-nav-center">
+            <h2 id="day-view-date">—</h2>
+            <button class="link-btn" id="day-today-btn" type="button">Today</button>
+          </div>
+          <button class="icon-btn" id="day-next-btn" type="button" aria-label="Next day">›</button>
+        </div>
+        <div class="day-progress-strip" id="day-progress-strip"></div>
+        <div id="day-task-groups" class="task-groups"></div>
+        <div id="day-empty-state" class="empty-state" hidden>
+          <p class="empty-emoji">✨</p>
+          <h3>Nothing here</h3>
+          <p>No tasks planned for this day.</p>
+          <button class="btn btn-primary" type="button" data-action="open-add-task">+ Add Task</button>
+        </div>
+      </div>
+
+      <!-- Week view -->
+      <div class="planner-view" id="view-week" hidden>
+        <div class="date-nav">
+          <button class="icon-btn" id="week-prev-btn" type="button" aria-label="Previous week">‹</button>
+          <div class="date-nav-center">
+            <h2 id="week-view-range">—</h2>
+            <button class="link-btn" id="week-today-btn" type="button">This week</button>
+          </div>
+          <button class="icon-btn" id="week-next-btn" type="button" aria-label="Next week">›</button>
+        </div>
+        <div class="week-grid" id="week-grid"></div>
+        <div id="week-day-tasks" class="task-groups"></div>
+      </div>
+
+      <!-- Month view -->
+      <div class="planner-view" id="view-month" hidden>
+        <div class="date-nav">
+          <button class="icon-btn" id="month-prev-btn" type="button" aria-label="Previous month">‹</button>
+          <div class="date-nav-center">
+            <h2 id="month-view-label">—</h2>
+            <button class="link-btn" id="month-today-btn" type="button">This month</button>
+          </div>
+          <button class="icon-btn" id="month-next-btn" type="button" aria-label="Next month">›</button>
+        </div>
+        <div class="month-weekday-row" id="month-weekday-row"></div>
+        <div class="month-grid" id="month-grid"></div>
+        <div id="month-day-tasks" class="task-groups"></div>
+      </div>
+
+      <!-- Year view -->
+      <div class="planner-view" id="view-year" hidden>
+        <div class="date-nav">
+          <button class="icon-btn" id="year-prev-btn" type="button" aria-label="Previous year">‹</button>
+          <div class="date-nav-center"><h2 id="year-view-label">—</h2></div>
+          <button class="icon-btn" id="year-next-btn" type="button" aria-label="Next year">›</button>
+        </div>
+        <div class="year-grid" id="year-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ BUY ============ -->
+    <section class="screen" id="screen-buy" data-screen="buy" aria-label="Things to Buy" hidden>
+      <header class="screen-header">
+        <h1>Things to Buy</h1>
+      </header>
+
+      <div class="shopping-stats-row" id="shopping-stats-row"></div>
+
+      <div class="tabs" role="tablist" aria-label="Shopping list view">
+        <button class="tab is-active" role="tab" data-shop-tab="pending" type="button">Pending</button>
+        <button class="tab" role="tab" data-shop-tab="purchased" type="button">Purchased</button>
+      </div>
+
+      <div id="shopping-list" class="shopping-list"></div>
+      <div id="shopping-empty-state" class="empty-state" hidden>
+        <p class="empty-emoji">🛒</p>
+        <h3>Your shopping list is empty</h3>
+        <p>Add something you need to pick up.</p>
+        <button class="btn btn-primary" type="button" data-action="open-add-shopping">+ Add Item</button>
+      </div>
+
+      <button class="link-btn danger-link" id="clear-purchased-btn" type="button" hidden>Clear Purchased</button>
+    </section>
+
+    <!-- ============ STATS ============ -->
+    <section class="screen" id="screen-stats" data-screen="stats" aria-label="Statistics" hidden>
+      <header class="screen-header">
+        <h1>Statistics</h1>
+      </header>
+
+      <div class="stats-summary-grid" id="stats-summary-grid"></div>
+
+      <div class="card">
+        <h2 class="card-title">Weekly Productivity</h2>
+        <div class="bar-chart" id="weekly-bar-chart"></div>
+      </div>
+
+      <div class="stats-metrics-row" id="stats-metrics-row"></div>
+
+      <div class="card">
+        <h2 class="card-title">Insights</h2>
+        <ul class="insights-list" id="insights-list"></ul>
+      </div>
+    </section>
+
+    <!-- ============ MORE ============ -->
+    <section class="screen" id="screen-more" data-screen="more" aria-label="More" hidden>
+      <header class="screen-header">
+        <h1>More</h1>
+      </header>
+
+      <div class="card">
+        <h2 class="card-title">Appearance</h2>
+        <div class="settings-row">
+          <span>Theme</span>
+          <div class="segmented" id="theme-segmented" role="radiogroup" aria-label="Theme">
+            <button data-theme="light" type="button" role="radio">Light</button>
+            <button data-theme="dark" type="button" role="radio">Dark</button>
+            <button data-theme="system" type="button" role="radio">System</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <label for="animations-toggle">Animations</label>
+          <input type="checkbox" id="animations-toggle" class="switch" role="switch" />
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Notifications &amp; Planning</h2>
+        <div class="settings-row">
+          <label for="notifications-toggle">Notifications</label>
+          <input type="checkbox" id="notifications-toggle" class="switch" role="switch" />
+        </div>
+        <p class="settings-note" id="notifications-support-note"></p>
+        <div class="settings-row">
+          <label for="carry-forward-toggle">Automatic Carry Forward</label>
+          <input type="checkbox" id="carry-forward-toggle" class="switch" role="switch" />
+        </div>
+        <div class="settings-row">
+          <label for="default-reminder-select">Default Reminder</label>
+          <select id="default-reminder-select" class="select-field">
+            <option value="none">None</option>
+            <option value="at-time">At task time</option>
+            <option value="10-min">10 minutes before</option>
+            <option value="30-min">30 minutes before</option>
+            <option value="1-hour">1 hour before</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label for="first-day-select">First Day of Week</label>
+          <select id="first-day-select" class="select-field">
+            <option value="monday">Monday</option>
+            <option value="sunday">Sunday</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Data</h2>
+        <div class="data-actions-grid">
+          <button class="btn btn-secondary" id="export-data-btn" type="button">Export Tasks</button>
+          <button class="btn btn-secondary" id="import-data-btn" type="button">Import Tasks</button>
+          <input type="file" id="import-file-input" accept="application/json" hidden />
+          <button class="btn btn-secondary" id="backup-data-btn" type="button">Backup Data</button>
+          <button class="btn btn-secondary" id="restore-data-btn" type="button">Restore Data</button>
+        </div>
+        <button class="btn btn-danger btn-block" id="clear-all-data-btn" type="button">Clear All Data</button>
+      </div>
+
+      <div class="card privacy-card">
+        <h2 class="card-title">Privacy</h2>
+        <p>🔒 Your data stays on this device.</p>
+        <p class="settings-note">Hari's Cura does not send your tasks anywhere, and includes no analytics or tracking.</p>
+      </div>
+
+      <p class="app-version">Hari's Cura v1.0.0</p>
+    </section>
+
+  </main>
+
+  <!-- Mobile bottom navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button class="nav-item is-active" data-screen="today" type="button"><span class="nav-icon" aria-hidden="true">☀️</span><span>Today</span></button>
+    <button class="nav-item" data-screen="planner" type="button"><span class="nav-icon" aria-hidden="true">🗓️</span><span>Planner</span></button>
+    <button class="nav-item nav-item-fab-spacer" type="button" tabindex="-1" aria-hidden="true"></button>
+    <button class="nav-item" data-screen="buy" type="button"><span class="nav-icon" aria-hidden="true">🛒</span><span>Buy</span></button>
+    <button class="nav-item" data-screen="more" type="button"><span class="nav-icon" aria-hidden="true">⚙️</span><span>More</span></button>
+  </nav>
+  <button class="fab" id="fab-add-btn" type="button" aria-label="Add task">+</button>
+  <button class="nav-item stats-mobile-shortcut" id="stats-mobile-shortcut" data-screen="stats" type="button" aria-label="Stats">📊</button>
+
+</div>
+
+<!-- ================= ADD/EDIT TASK MODAL ================= -->
+<div class="sheet-overlay" id="task-modal-overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-header">
+      <h2 id="task-modal-title">Add Task</h2>
+      <button class="icon-btn" id="task-modal-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <form id="task-form" class="sheet-body">
+      <input type="hidden" id="task-id-field" />
+
+      <label class="field-label" for="task-title-field">Task name <span class="required">*</span></label>
+      <input type="text" id="task-title-field" class="text-field" placeholder="e.g. Pay electricity bill" required maxlength="120" />
+      <p class="field-error" id="task-title-error" hidden>Please enter a task name.</p>
+
+      <label class="field-label" for="task-desc-field">Description</label>
+      <textarea id="task-desc-field" class="text-field textarea-field" placeholder="Optional details" rows="2" maxlength="500"></textarea>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label class="field-label" for="task-date-field">Date</label>
+          <input type="date" id="task-date-field" class="text-field" />
+        </div>
+        <div class="field-col">
+          <label class="field-label" for="task-time-field">Time</label>
+          <input type="time" id="task-time-field" class="text-field" />
+        </div>
+      </div>
+
+      <label class="field-label">Priority</label>
+      <div class="segmented segmented-priority" id="task-priority-field" role="radiogroup" aria-label="Priority">
+        <button type="button" data-value="low" role="radio">Low</button>
+        <button type="button" data-value="medium" role="radio">Medium</button>
+        <button type="button" data-value="high" role="radio">High</button>
+      </div>
+
+      <label class="field-label" for="task-category-field">Category</label>
+      <select id="task-category-field" class="select-field">
+        <option value="work">Work</option>
+        <option value="personal">Personal</option>
+        <option value="family">Family</option>
+        <option value="finance">Finance</option>
+        <option value="shopping">Shopping</option>
+        <option value="health">Health</option>
+        <option value="car">Car</option>
+        <option value="learning">Learning</option>
+        <option value="other">Other</option>
+        <option value="__custom__">+ Add custom category…</option>
+      </select>
+      <input type="text" id="task-custom-category-field" class="text-field" placeholder="Custom category name" hidden maxlength="24" />
+
+      <label class="field-label" for="task-reminder-field">Reminder</label>
+      <select id="task-reminder-field" class="select-field">
+        <option value="none">None</option>
+        <option value="at-time">At task time</option>
+        <option value="10-min">10 minutes before</option>
+        <option value="30-min">30 minutes before</option>
+        <option value="1-hour">1 hour before</option>
+        <option value="custom">Custom</option>
+      </select>
+      <input type="number" id="task-reminder-custom-field" class="text-field" placeholder="Minutes before" min="1" max="1440" hidden />
+
+      <label class="field-label" for="task-repeat-field">Repeat</label>
+      <select id="task-repeat-field" class="select-field">
+        <option value="none">None</option>
+        <option value="daily">Daily</option>
+        <option value="weekdays">Weekdays</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+
+      <div class="settings-row settings-row-tight">
+        <label for="task-carry-forward-field">Carry forward if incomplete</label>
+        <input type="checkbox" id="task-carry-forward-field" class="switch" role="switch" checked />
+      </div>
+
+      <label class="field-label" for="task-notes-field">Notes</label>
+      <textarea id="task-notes-field" class="text-field textarea-field" placeholder="Optional notes" rows="2" maxlength="500"></textarea>
+
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-ghost btn-block" id="task-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-block" id="task-save-btn">Save Task</button>
+      </div>
+
+      <div class="sheet-secondary-actions" id="task-edit-only-actions" hidden>
+        <button type="button" class="link-btn" id="task-move-btn">Move to date</button>
+        <button type="button" class="link-btn danger-link" id="task-delete-btn">Delete Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MOVE TASK MODAL ================= -->
+<div class="sheet-overlay" id="move-modal-overlay" hidden>
+  <div class="sheet sheet-small" role="dialog" aria-modal="true" aria-labelledby="move-modal-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-header">
+      <h2 id="move-modal-title">Move to date</h2>
+      <button class="icon-btn" id="move-modal-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="move-options">
+        <button class="btn btn-secondary btn-block" id="move-tomorrow-btn" type="button">Tomorrow</button>
+        <button class="btn btn-secondary btn-block" id="move-next-monday-btn" type="button">Next Monday</button>
+      </div>
+      <label class="field-label" for="move-custom-date-field">Custom date</label>
+      <input type="date" id="move-custom-date-field" class="text-field" />
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-primary btn-block" id="move-confirm-btn">Move Task</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ADD SHOPPING ITEM MODAL ================= -->
+<div class="sheet-overlay" id="shopping-modal-overlay" hidden>
+  <div class="sheet sheet-small" role="dialog" aria-modal="true" aria-labelledby="shopping-modal-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-header">
+      <h2 id="shopping-modal-title">Add Item</h2>
+      <button class="icon-btn" id="shopping-modal-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <form id="shopping-form" class="sheet-body">
+      <input type="hidden" id="shopping-id-field" />
+      <label class="field-label" for="shopping-item-field">Item <span class="required">*</span></label>
+      <input type="text" id="shopping-item-field" class="text-field" placeholder="e.g. Milk" required maxlength="80" />
+      <p class="field-error" id="shopping-item-error" hidden>Please enter an item name.</p>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label class="field-label" for="shopping-qty-field">Quantity</label>
+          <input type="text" id="shopping-qty-field" class="text-field" placeholder="e.g. 2 packets" maxlength="30" />
+        </div>
+        <div class="field-col">
+          <label class="field-label" for="shopping-category-field">Category</label>
+          <select id="shopping-category-field" class="select-field">
+            <option value="grocery">Grocery</option>
+            <option value="household">Household</option>
+            <option value="personal">Personal</option>
+            <option value="electronics">Electronics</option>
+            <option value="kids">Kids</option>
+            <option value="car">Car</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="field-label" for="shopping-notes-field">Notes</label>
+      <textarea id="shopping-notes-field" class="text-field textarea-field" placeholder="Optional notes" rows="2" maxlength="300"></textarea>
+
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-ghost btn-block" id="shopping-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-block" id="shopping-save-btn">Save Item</button>
+      </div>
+      <div class="sheet-secondary-actions" id="shopping-edit-only-actions" hidden>
+        <button type="button" class="link-btn danger-link" id="shopping-delete-btn">Delete Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= SEARCH OVERLAY ================= -->
+<div class="sheet-overlay" id="search-overlay" hidden>
+  <div class="sheet sheet-search" role="dialog" aria-modal="true" aria-labelledby="search-title">
+    <div class="sheet-header">
+      <h2 id="search-title">Search tasks</h2>
+      <button class="icon-btn" id="search-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body">
+      <input type="search" id="search-input" class="text-field" placeholder="Search by title, notes, or category…" />
+      <div id="search-results" class="task-groups"></div>
+      <p id="search-empty" class="settings-note" hidden>No matching tasks.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= GENERIC CONFIRM DIALOG ================= -->
+<div class="confirm-overlay" id="confirm-overlay" hidden>
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-message">This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" id="confirm-cancel-btn" type="button">Cancel</button>
+      <button class="btn btn-danger btn-block" id="confirm-ok-btn" type="button">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= INSTALL PROMPT ================= -->
+<div class="install-banner" id="install-banner" hidden>
+  <div class="install-banner-text">
+    <strong>Install Hari's Cura</strong>
+    <span>Keep your planner one tap away.</span>
+  </div>
+  <div class="install-banner-actions">
+    <button class="btn btn-ghost btn-sm" id="install-dismiss-btn" type="button">Not Now</button>
+    <button class="btn btn-primary btn-sm" id="install-accept-btn" type="button">Install</button>
+  </div>
+</div>
+
+<!-- ================= TOASTS ================= -->
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="./db.js"></script>
+<script src="./notifications.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

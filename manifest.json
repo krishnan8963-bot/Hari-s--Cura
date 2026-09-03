@@ -1,0 +1,32 @@
+{
+  "name": "Hari's Cura — Smart Personal Planner",
+  "short_name": "Hari's Cura",
+  "description": "A calm, premium personal to-do and life planner. Plan your day, track your progress, and manage your shopping list — fully offline, with your data staying on your device.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F6F6FA",
+  "theme_color": "#4F46E5",
+  "categories": ["productivity", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
