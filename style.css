@@ -262,7 +262,8 @@ a { color: inherit; }
   width: 42px; height: 42px; border-radius: var(--r-pill);
   background: var(--card-bg); box-shadow: var(--shadow-md);
   border: 1px solid var(--card-border);
-  display: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer;
 }
 
 .fab {
