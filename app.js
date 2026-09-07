@@ -376,7 +376,7 @@ function updateGreeting() {
   else if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
   else if (hour >= 17 && hour < 21) greeting = 'Good Evening';
   else greeting = 'Good Night';
-  document.getElementById('greeting-text').textContent = `${greeting} 👋`;
+  document.getElementById('greeting-text').textContent = `${greeting}, Hari 👋`;
   document.getElementById('today-date-text').textContent = DateUtil.formatFriendly(DateUtil.todayKey());
 }
 
