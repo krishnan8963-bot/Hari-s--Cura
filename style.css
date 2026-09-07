@@ -96,9 +96,16 @@ body.no-animations *, body.no-animations *::before, body.no-animations *::after 
 }
 
 * { box-sizing: border-box; }
-/* Make sure anything hidden via the `hidden` attribute actually disappears,
-   even when a component's own CSS sets display:flex/block for layout. */
+
+/* Any element hidden via the `hidden` attribute must actually disappear.
+   Several components below (.welcome-screen, .app-shell, .sheet-overlay,
+   .confirm-overlay, .install-banner, .empty-state, etc.) set their own
+   `display` value (flex/block) for layout — which, per normal CSS cascade
+   rules, would otherwise override the browser's built-in `[hidden]`
+   default and make `el.hidden = true` a no-op. This rule guarantees
+   `hidden` always wins, everywhere in the app. */
 [hidden] { display: none !important; }
+
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -187,27 +194,6 @@ a { color: inherit; }
 }
 .card-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
 
-/* ============================ WELCOME SCREEN ============================ */
-.welcome-screen {
-  position: fixed; inset: 0; z-index: 500;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg);
-  padding: 24px;
-  animation: fadeIn var(--dur-slow) var(--ease);
-}
-.welcome-content { text-align: center; max-width: 380px; }
-.welcome-logo {
-  display: inline-flex; margin-bottom: 28px;
-  filter: drop-shadow(0 12px 24px rgba(91, 79, 233, 0.35));
-  animation: floatIn var(--dur-slow) var(--ease);
-}
-.welcome-content h1 { font-size: 28px; margin-bottom: 10px; letter-spacing: -0.02em; }
-.welcome-tagline { color: var(--text-secondary); font-size: 16px; line-height: 1.5; margin-bottom: 32px; }
-.welcome-footnote { margin-top: 18px; font-size: 13px; color: var(--text-tertiary); }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes floatIn { from { opacity: 0; transform: translateY(-10px) scale(0.9); } to { opacity: 1; transform: none; } }
-
 /* =============================== APP SHELL =============================== */
 .app-shell {
   display: flex;
@@ -224,6 +210,7 @@ a { color: inherit; }
 
 .screen { animation: screenIn var(--dur-med) var(--ease); }
 @keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .screen-header { margin-bottom: 18px; }
 .screen-header h1 { font-size: 24px; letter-spacing: -0.02em; }
@@ -234,7 +221,7 @@ a { color: inherit; }
 /* ----------------------------- Bottom nav (mobile) --------------------------- */
 .bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-around;
+  display: flex; align-items: center; justify-content: space-between;
   height: calc(var(--bottom-nav-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
   background: var(--glass-bg);
@@ -246,16 +233,16 @@ a { color: inherit; }
   background: none; border: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   color: var(--text-tertiary);
-  font-size: 11px; font-weight: 600;
-  padding: 6px 10px; min-width: 56px;
+  font-size: 10.5px; font-weight: 600;
+  padding: 6px 2px; flex: 1; min-width: 0;
   border-radius: var(--r-sm);
   transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
-.bottom-nav .nav-item .nav-icon { font-size: 20px; line-height: 1; filter: grayscale(0.35); }
+.bottom-nav .nav-item .nav-icon { font-size: 19px; line-height: 1; filter: grayscale(0.35); }
 .bottom-nav .nav-item.is-active { color: var(--accent-solid); }
 .bottom-nav .nav-item.is-active .nav-icon { filter: none; transform: translateY(-1px); }
 .bottom-nav .nav-item:active { transform: scale(0.92); }
-.nav-item-fab-spacer { min-width: 56px; pointer-events: none; }
+.nav-item-fab-spacer { flex: 1; min-width: 0; pointer-events: none; }
 .stats-mobile-shortcut {
   position: fixed; z-index: 101;
   right: 12px; bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 16px);
@@ -264,7 +251,9 @@ a { color: inherit; }
   border: 1px solid var(--card-border);
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease);
 }
+.stats-mobile-shortcut:active { transform: scale(0.9); }
 
 .fab {
   position: fixed; z-index: 102;
@@ -280,6 +269,81 @@ a { color: inherit; }
 }
 .fab:active { transform: translateX(-50%) scale(0.9); }
 .sidebar-add-btn { display: none; }
+
+/* ============================== MY VISION SCREEN ============================= */
+.vision-header { text-align: center; padding: 8px 4px 22px; }
+.vision-title {
+  display: inline-block;
+  font-size: 26px; font-weight: 800; letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.vision-subtitle { font-style: italic; font-size: 15px; color: var(--text-secondary); }
+
+.vision-carousel {
+  display: flex; gap: 16px;
+  overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  padding: 4px 4px 22px; margin: 0 -4px;
+  scrollbar-width: none;
+}
+.vision-carousel::-webkit-scrollbar { display: none; }
+
+.vision-card {
+  position: relative; overflow: hidden;
+  flex: 0 0 86%; scroll-snap-align: center;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-md);
+  padding: 30px 26px 32px;
+  animation: visionCardIn var(--dur-slow) var(--ease) both;
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.vision-card:hover, .vision-card:active { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.vision-card:nth-child(1) { animation-delay: 0ms; }
+.vision-card:nth-child(2) { animation-delay: 90ms; }
+.vision-card:nth-child(3) { animation-delay: 180ms; }
+@keyframes visionCardIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+.vision-card.is-money { background: radial-gradient(120% 140% at 12% -10%, rgba(16, 185, 129, 0.16), transparent 60%), var(--card-bg); }
+.vision-card.is-home { background: radial-gradient(120% 140% at 12% -10%, rgba(91, 79, 233, 0.18), transparent 60%), var(--card-bg); }
+.vision-card.is-health { background: radial-gradient(120% 140% at 12% -10%, rgba(239, 68, 68, 0.14), transparent 60%), var(--card-bg); }
+[data-theme='dark'] .vision-card.is-money { box-shadow: 0 14px 32px rgba(16, 185, 129, 0.16), var(--shadow-md); }
+[data-theme='dark'] .vision-card.is-home { box-shadow: 0 14px 32px rgba(91, 79, 233, 0.2), var(--shadow-md); }
+[data-theme='dark'] .vision-card.is-health { box-shadow: 0 14px 32px rgba(239, 68, 68, 0.16), var(--shadow-md); }
+
+.vision-card-quote {
+  position: absolute; top: 0px; right: 16px;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 96px; line-height: 1;
+  color: var(--text-primary); opacity: 0.06; pointer-events: none; user-select: none;
+}
+[data-theme='dark'] .vision-card-quote { opacity: 0.1; }
+.vision-card-icon {
+  position: relative; z-index: 1;
+  width: 56px; height: 56px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 27px; margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.55); box-shadow: var(--shadow-sm);
+}
+[data-theme='dark'] .vision-card-icon { background: rgba(255, 255, 255, 0.07); }
+.vision-card-title {
+  position: relative; z-index: 1;
+  font-size: 12.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 12px;
+}
+.vision-card-text {
+  position: relative; z-index: 1;
+  font-family: var(--font-display); font-style: italic; font-weight: 600;
+  font-size: 18.5px; line-height: 1.5; color: var(--text-primary);
+}
+
+@media (min-width: 860px) {
+  .vision-carousel {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    overflow: visible; margin: 0;
+  }
+  .vision-card { flex: none; }
+}
 
 /* =============================== TODAY SCREEN ============================== */
 .today-header {
