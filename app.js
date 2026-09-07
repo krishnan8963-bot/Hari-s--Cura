@@ -111,7 +111,7 @@ const State = {
   tasks: [],
   shopping: [],
   settings: { ...DB.DEFAULT_SETTINGS },
-  currentScreen: 'today',
+  currentScreen: 'vision',
   todayFilter: 'all',
   plannerView: 'day',
   plannerDayDate: DateUtil.todayKey(),
@@ -836,12 +836,22 @@ function switchScreen(screenName) {
 
 function renderCurrentScreen() {
   switch (State.currentScreen) {
+    case 'vision': renderVisionScreen(); break;
     case 'today': renderTodayScreen(); break;
     case 'planner': renderPlannerScreen(); break;
     case 'buy': renderBuyScreen(); break;
     case 'stats': renderStatsScreen(); break;
     case 'more': renderMoreScreenState(); break;
   }
+}
+
+/** Replays the Vision cards' entrance animation each time the section is opened. */
+function renderVisionScreen() {
+  document.querySelectorAll('#vision-carousel .vision-card').forEach((card) => {
+    card.style.animation = 'none';
+    void card.offsetHeight; // force reflow so the animation can replay
+    card.style.animation = '';
+  });
 }
 
 function renderMoreScreenState() {
@@ -878,13 +888,8 @@ async function init() {
   applyTheme();
   applyAnimationSetting();
 
-  if (!State.settings.onboarded) {
-    await seedSampleData();
-    await loadAllData();
-    showWelcomeScreen();
-  } else {
-    showAppShell();
-  }
+  await seedSampleData(); // no-ops once real tasks exist
+  await loadAllData();
 
   const movedCount = await TaskLogic.runAutoCarryForward();
   if (movedCount > 0) await loadAllData();
@@ -892,7 +897,7 @@ async function init() {
   Notifications.scheduleAll(State.tasks, State.settings);
 
   setupEventListeners();
-  renderCurrentScreen();
+  switchScreen('vision'); // My Vision is the app's home screen
   setupPersistentStorage();
   setInterval(() => {
     // Re-check carry-forward and refresh greeting when the date rolls over.
@@ -969,16 +974,6 @@ async function seedSampleData() {
   }
 }
 
-function showWelcomeScreen() {
-  document.getElementById('welcome-screen').hidden = false;
-  document.getElementById('app-shell').hidden = true;
-}
-
-function showAppShell() {
-  document.getElementById('welcome-screen').hidden = true;
-  document.getElementById('app-shell').hidden = false;
-}
-
 document.addEventListener('DOMContentLoaded', init);
 
 /* ============================================================================
@@ -1034,7 +1029,6 @@ const TaskModal = {
     document.getElementById('task-title-field').value = task.title || '';
     document.getElementById('task-desc-field').value = task.description || '';
     document.getElementById('task-date-field').value = task.date || DateUtil.todayKey();
-    document.getElementById('task-time-field').value = task.time || '';
     this.setPriority(task.priority || 'medium');
 
     const catSelect = document.getElementById('task-category-field');
@@ -1135,7 +1129,10 @@ async function handleTaskFormSubmit(e) {
     title,
     description: document.getElementById('task-desc-field').value.trim(),
     date: document.getElementById('task-date-field').value || DateUtil.todayKey(),
-    time: document.getElementById('task-time-field').value || '',
+    // The Time field was removed from the form; preserve whatever time an
+    // existing task already had (e.g. from sample data) rather than wiping
+    // it, but new tasks simply have no time.
+    time: existing ? (existing.time || '') : '',
     completed: existing ? existing.completed : false,
     completedAt: existing ? existing.completedAt : null,
     priority: TaskModal.getPriority(),
@@ -1154,7 +1151,6 @@ async function handleTaskFormSubmit(e) {
   };
 
   await DB.Tasks.save(task);
-  await DB.Settings.set('onboarded', true);
 
   const idx = State.tasks.findIndex((t) => t.id === task.id);
   if (idx >= 0) State.tasks[idx] = task; else State.tasks.push(task);
@@ -1456,14 +1452,6 @@ function setupEventListeners() {
   MoveModal.init();
   ShoppingModal.init();
   setupInstallBannerHandlers();
-
-  // Welcome screen
-  document.getElementById('welcome-start-btn').addEventListener('click', async () => {
-    await DB.Settings.set('onboarded', true);
-    State.settings.onboarded = true;
-    showAppShell();
-    renderCurrentScreen();
-  });
 
   // Navigation (both sidebar and bottom nav share [data-screen] buttons)
   document.querySelectorAll('[data-screen]').forEach((btn) => {
