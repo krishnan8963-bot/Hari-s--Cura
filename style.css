@@ -271,10 +271,27 @@ a { color: inherit; }
 .sidebar-add-btn { display: none; }
 
 /* ============================== MY VISION SCREEN ============================= */
-.vision-header { text-align: center; padding: 8px 4px 22px; }
+:root {
+  --gold-title: #92400E;   /* deep warm gold — strong contrast for titles on light cards */
+  --gold-text: #B45309;    /* medium gold — for the affirmation sentence itself */
+  --gold-glow: 217, 119, 6;
+}
+[data-theme='dark'] {
+  --gold-title: #FCD34D;   /* bright warm gold — strong contrast for titles on dark cards */
+  --gold-text: #FBBF24;    /* slightly softer bright gold for the affirmation sentence */
+  --gold-glow: 251, 191, 36;
+}
+
+.app-brand-header { text-align: center; padding: 4px 4px 4px; }
+.app-brand-title {
+  font-size: 22px; font-weight: 800; letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.vision-header { text-align: center; padding: 6px 4px 22px; }
 .vision-title {
   display: inline-block;
-  font-size: 26px; font-weight: 800; letter-spacing: -0.01em;
+  font-size: 21px; font-weight: 800; letter-spacing: -0.01em;
   margin-bottom: 8px;
   background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -293,6 +310,7 @@ a { color: inherit; }
   border: 1px solid var(--card-border);
   box-shadow: var(--shadow-md);
   padding: 30px 26px 32px;
+  background: var(--card-bg);
   animation: visionCardIn var(--dur-slow) var(--ease) both;
   transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
@@ -300,38 +318,43 @@ a { color: inherit; }
 .vision-card:nth-child(1) { animation-delay: 0ms; }
 .vision-card:nth-child(2) { animation-delay: 90ms; }
 .vision-card:nth-child(3) { animation-delay: 180ms; }
-@keyframes visionCardIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
 
-.vision-card.is-money { background: radial-gradient(120% 140% at 12% -10%, rgba(16, 185, 129, 0.16), transparent 60%), var(--card-bg); }
-.vision-card.is-home { background: radial-gradient(120% 140% at 12% -10%, rgba(91, 79, 233, 0.18), transparent 60%), var(--card-bg); }
-.vision-card.is-health { background: radial-gradient(120% 140% at 12% -10%, rgba(239, 68, 68, 0.14), transparent 60%), var(--card-bg); }
-[data-theme='dark'] .vision-card.is-money { box-shadow: 0 14px 32px rgba(16, 185, 129, 0.16), var(--shadow-md); }
-[data-theme='dark'] .vision-card.is-home { box-shadow: 0 14px 32px rgba(91, 79, 233, 0.2), var(--shadow-md); }
-[data-theme='dark'] .vision-card.is-health { box-shadow: 0 14px 32px rgba(239, 68, 68, 0.16), var(--shadow-md); }
+@keyframes visionCardIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
 
 .vision-card-quote {
   position: absolute; top: 0px; right: 16px;
   font-family: Georgia, 'Times New Roman', serif; font-size: 96px; line-height: 1;
-  color: var(--text-primary); opacity: 0.06; pointer-events: none; user-select: none;
+  color: var(--gold-text); opacity: 0.14; pointer-events: none; user-select: none;
 }
-[data-theme='dark'] .vision-card-quote { opacity: 0.1; }
 .vision-card-icon {
   position: relative; z-index: 1;
   width: 56px; height: 56px; border-radius: 18px;
   display: flex; align-items: center; justify-content: center;
   font-size: 27px; margin-bottom: 18px;
-  background: rgba(255, 255, 255, 0.55); box-shadow: var(--shadow-sm);
+  background: var(--neutral-priority-bg); box-shadow: var(--shadow-sm);
 }
-[data-theme='dark'] .vision-card-icon { background: rgba(255, 255, 255, 0.07); }
 .vision-card-title {
   position: relative; z-index: 1;
   font-size: 12.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-secondary); margin-bottom: 12px;
+  color: var(--gold-title); margin-bottom: 12px;
 }
+
+/* The affirmation sentence itself: gold, with a slow glow pulse that never
+   drops opacity — it brightens and softens rather than fading in and out.
+   Each card's sentence is offset so they glow one after another. */
 .vision-card-text {
   position: relative; z-index: 1;
   font-family: var(--font-display); font-style: italic; font-weight: 600;
-  font-size: 18.5px; line-height: 1.5; color: var(--text-primary);
+  font-size: 18.5px; line-height: 1.5; color: var(--gold-text);
+  animation: goldTextPulse 2.6s ease-in-out infinite;
+}
+.vision-card:nth-child(1) .vision-card-text { animation-delay: 0.2s; }
+.vision-card:nth-child(2) .vision-card-text { animation-delay: 1.0s; }
+.vision-card:nth-child(3) .vision-card-text { animation-delay: 1.8s; }
+
+@keyframes goldTextPulse {
+  0%, 100% { text-shadow: 0 0 0 rgba(var(--gold-glow), 0); }
+  50% { text-shadow: 0 0 14px rgba(var(--gold-glow), 0.6); }
 }
 
 /* =============================== TODAY SCREEN ============================== */
