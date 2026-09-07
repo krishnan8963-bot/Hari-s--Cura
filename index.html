@@ -20,32 +20,8 @@
 </head>
 <body>
 
-<!-- ================= WELCOME / FIRST RUN ================= -->
-<section id="welcome-screen" class="welcome-screen" aria-labelledby="welcome-title" hidden>
-  <div class="welcome-content">
-    <div class="welcome-logo" aria-hidden="true">
-      <svg viewBox="0 0 64 64" width="64" height="64">
-        <defs>
-          <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#4F46E5"/>
-            <stop offset="100%" stop-color="#8B5CF6"/>
-          </linearGradient>
-        </defs>
-        <rect width="64" height="64" rx="16" fill="url(#logoGrad)"/>
-        <text x="32" y="42" text-anchor="middle" font-family="'Poppins',sans-serif" font-weight="700" font-size="30" fill="#fff">H</text>
-        <circle cx="47" cy="47" r="9" fill="#10B981"/>
-        <path d="M43 47.5l2.6 2.6 5-5.4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <h1 id="welcome-title">Welcome to Hari's Cura 👋</h1>
-    <p class="welcome-tagline">Plan your day. Stay on track. Get things done.</p>
-    <button id="welcome-start-btn" class="btn btn-primary btn-lg" type="button">Let's get started</button>
-    <p class="welcome-footnote">No account. No sign-up. Your data stays on this device.</p>
-  </div>
-</section>
-
 <!-- ================= APP SHELL ================= -->
-<div id="app-shell" class="app-shell" hidden>
+<div id="app-shell" class="app-shell">
 
   <!-- Desktop sidebar -->
   <nav class="sidebar" aria-label="Main navigation">
@@ -57,6 +33,7 @@
       <span class="icon-plus" aria-hidden="true">+</span> Add task
     </button>
     <ul class="sidebar-nav-list" role="list">
+      <li><button class="nav-item" data-screen="vision" type="button"><span class="nav-icon" aria-hidden="true">✨</span><span>My Vision</span></button></li>
       <li><button class="nav-item" data-screen="today" type="button"><span class="nav-icon" aria-hidden="true">☀️</span><span>Today</span></button></li>
       <li><button class="nav-item" data-screen="planner" type="button"><span class="nav-icon" aria-hidden="true">🗓️</span><span>Planner</span></button></li>
       <li><button class="nav-item" data-screen="buy" type="button"><span class="nav-icon" aria-hidden="true">🛒</span><span>Buy</span></button></li>
@@ -71,8 +48,37 @@
   <!-- Main content area -->
   <main class="main-content" id="main-content">
 
+    <!-- ============ MY VISION ============ -->
+    <section class="screen" id="screen-vision" data-screen="vision" aria-label="My Vision">
+      <header class="vision-header">
+        <h1 class="vision-title">✨ MY VISION</h1>
+        <p class="vision-subtitle">All is good. All is well.</p>
+      </header>
+
+      <div class="vision-carousel" id="vision-carousel">
+        <div class="vision-card is-money">
+          <span class="vision-card-quote" aria-hidden="true">“</span>
+          <div class="vision-card-icon">💰</div>
+          <h2 class="vision-card-title">Financial Freedom</h2>
+          <p class="vision-card-text">I am financially abundant. I have crores of money in my bank account by 2026.</p>
+        </div>
+        <div class="vision-card is-home">
+          <span class="vision-card-quote" aria-hidden="true">“</span>
+          <div class="vision-card-icon">🏡</div>
+          <h2 class="vision-card-title">My Dream Home</h2>
+          <p class="vision-card-text">I am living in beautiful 4 BHK villas in Ooty and Coimbatore by 2027.</p>
+        </div>
+        <div class="vision-card is-health">
+          <span class="vision-card-quote" aria-hidden="true">“</span>
+          <div class="vision-card-icon">❤️</div>
+          <h2 class="vision-card-title">Health &amp; Well-Being</h2>
+          <p class="vision-card-text">Health is at its best for me and everyone in my family.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ TODAY ============ -->
-    <section class="screen" id="screen-today" data-screen="today" aria-label="Today">
+    <section class="screen" id="screen-today" data-screen="today" aria-label="Today" hidden>
       <header class="today-header">
         <div>
           <p class="greeting" id="greeting-text">Good Morning 👋</p>
@@ -311,7 +317,8 @@
 
   <!-- Mobile bottom navigation -->
   <nav class="bottom-nav" aria-label="Main navigation">
-    <button class="nav-item is-active" data-screen="today" type="button"><span class="nav-icon" aria-hidden="true">☀️</span><span>Today</span></button>
+    <button class="nav-item is-active" data-screen="vision" type="button"><span class="nav-icon" aria-hidden="true">✨</span><span>Vision</span></button>
+    <button class="nav-item" data-screen="today" type="button"><span class="nav-icon" aria-hidden="true">☀️</span><span>Today</span></button>
     <button class="nav-item" data-screen="planner" type="button"><span class="nav-icon" aria-hidden="true">🗓️</span><span>Planner</span></button>
     <button class="nav-item nav-item-fab-spacer" type="button" tabindex="-1" aria-hidden="true"></button>
     <button class="nav-item" data-screen="buy" type="button"><span class="nav-icon" aria-hidden="true">🛒</span><span>Buy</span></button>
@@ -340,16 +347,8 @@
       <label class="field-label" for="task-desc-field">Description</label>
       <textarea id="task-desc-field" class="text-field textarea-field" placeholder="Optional details" rows="2" maxlength="500"></textarea>
 
-      <div class="field-row">
-        <div class="field-col">
-          <label class="field-label" for="task-date-field">Date</label>
-          <input type="date" id="task-date-field" class="text-field" />
-        </div>
-        <div class="field-col">
-          <label class="field-label" for="task-time-field">Time</label>
-          <input type="time" id="task-time-field" class="text-field" />
-        </div>
-      </div>
+      <label class="field-label" for="task-date-field">Date</label>
+      <input type="date" id="task-date-field" class="text-field" />
 
       <label class="field-label">Priority</label>
       <div class="segmented segmented-priority" id="task-priority-field" role="radiogroup" aria-label="Priority">
