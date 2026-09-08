@@ -271,15 +271,13 @@ a { color: inherit; }
 .sidebar-add-btn { display: none; }
 
 /* ============================== MY VISION SCREEN ============================= */
+/* These cards are intentionally dark-styled regardless of the app's light/dark
+   theme toggle — a deliberate "featured, cinematic" treatment distinct from
+   the rest of the app's neutral surfaces. */
 :root {
-  --gold-title: #92400E;   /* deep warm gold — strong contrast for titles on light cards */
-  --gold-text: #B45309;    /* medium gold — for the affirmation sentence itself */
-  --gold-glow: 217, 119, 6;
-}
-[data-theme='dark'] {
-  --gold-title: #FCD34D;   /* bright warm gold — strong contrast for titles on dark cards */
-  --gold-text: #FBBF24;    /* slightly softer bright gold for the affirmation sentence */
-  --gold-glow: 251, 191, 36;
+  --vision-gold: #F2C14E;
+  --vision-gold-glow: 242, 193, 78;
+  --vision-cream: #F3ECDD;
 }
 
 .app-brand-header { text-align: center; padding: 4px 4px 4px; }
@@ -305,56 +303,88 @@ a { color: inherit; }
 
 .vision-card {
   position: relative; overflow: hidden;
-  width: 100%;
+  width: 100%; min-height: 208px;
   border-radius: var(--r-xl);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--shadow-md);
-  padding: 30px 26px 32px;
-  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+  padding: 26px 24px 22px;
+  display: flex; flex-direction: column; justify-content: flex-start;
   animation: visionCardIn var(--dur-slow) var(--ease) both;
   transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
-.vision-card:hover, .vision-card:active { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.vision-card:hover, .vision-card:active { transform: translateY(-3px); }
+.vision-card.is-manifesting { box-shadow: 0 0 56px 6px rgba(var(--vision-gold-glow), 0.55), 0 18px 40px rgba(0, 0, 0, 0.4); }
 .vision-card:nth-child(1) { animation-delay: 0ms; }
 .vision-card:nth-child(2) { animation-delay: 90ms; }
 .vision-card:nth-child(3) { animation-delay: 180ms; }
 
+.vision-card.is-money { background: linear-gradient(160deg, #0C2318 0%, #04100A 55%, #071B12 100%); }
+.vision-card.is-home { background: linear-gradient(160deg, #18143A 0%, #0A0920 55%, #100D28 100%); }
+.vision-card.is-health { background: linear-gradient(160deg, #301120 0%, #170A10 55%, #331608 100%); }
+
 @keyframes visionCardIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
 
-.vision-card-quote {
-  position: absolute; top: 0px; right: 16px;
-  font-family: Georgia, 'Times New Roman', serif; font-size: 96px; line-height: 1;
-  color: var(--gold-text); opacity: 0.14; pointer-events: none; user-select: none;
+/* Decorative background illustration, faded into the dark card on its left
+   edge so the text always stays fully readable. */
+.vision-card-art {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 46%;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to left, black 35%, transparent 95%);
+  mask-image: linear-gradient(to left, black 35%, transparent 95%);
 }
+.vision-card-art svg { width: 100%; height: 100%; display: block; }
+
+.vision-card-content { position: relative; z-index: 1; max-width: 64%; }
+.vision-card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
 .vision-card-icon {
-  position: relative; z-index: 1;
-  width: 56px; height: 56px; border-radius: 18px;
+  flex-shrink: 0;
+  width: 44px; height: 44px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 27px; margin-bottom: 18px;
-  background: var(--neutral-priority-bg); box-shadow: var(--shadow-sm);
+  font-size: 20px;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(var(--vision-gold-glow), 0.35);
+  box-shadow: 0 0 18px rgba(var(--vision-gold-glow), 0.2);
 }
 .vision-card-title {
-  position: relative; z-index: 1;
   font-size: 12.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--gold-title); margin-bottom: 12px;
+  color: var(--vision-gold); margin: 4px 0 0;
+  animation: goldGlowPulse 2.6s ease-in-out infinite;
+}
+.vision-title-underline {
+  display: block; width: 30px; height: 2px; margin-top: 7px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--vision-gold), transparent);
+}
+.vision-card:nth-child(1) .vision-card-title { animation-delay: 0.2s; }
+.vision-card:nth-child(2) .vision-card-title { animation-delay: 1.0s; }
+.vision-card:nth-child(3) .vision-card-title { animation-delay: 1.8s; }
+
+@keyframes goldGlowPulse {
+  0%, 100% { text-shadow: 0 0 0 rgba(var(--vision-gold-glow), 0); }
+  50% { text-shadow: 0 0 14px rgba(var(--vision-gold-glow), 0.65); }
 }
 
-/* The affirmation sentence itself: gold, with a slow glow pulse that never
-   drops opacity — it brightens and softens rather than fading in and out.
-   Each card's sentence is offset so they glow one after another. */
 .vision-card-text {
-  position: relative; z-index: 1;
   font-family: var(--font-display); font-style: italic; font-weight: 600;
-  font-size: 18.5px; line-height: 1.5; color: var(--gold-text);
-  animation: goldTextPulse 2.6s ease-in-out infinite;
+  font-size: 18px; line-height: 1.5; color: var(--vision-cream);
+  margin-bottom: 18px;
 }
-.vision-card:nth-child(1) .vision-card-text { animation-delay: 0.2s; }
-.vision-card:nth-child(2) .vision-card-text { animation-delay: 1.0s; }
-.vision-card:nth-child(3) .vision-card-text { animation-delay: 1.8s; }
 
-@keyframes goldTextPulse {
-  0%, 100% { text-shadow: 0 0 0 rgba(var(--gold-glow), 0); }
-  50% { text-shadow: 0 0 14px rgba(var(--gold-glow), 0.6); }
+.vision-manifest-btn {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--r-pill);
+  border: 1px solid rgba(var(--vision-gold-glow), 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  color: var(--vision-gold); font-weight: 700; font-size: 13px;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.vision-manifest-btn:hover { background: rgba(255, 255, 255, 0.12); }
+.vision-manifest-btn:active { transform: scale(0.94); }
+
+@media (max-width: 480px) {
+  .vision-card-art { width: 38%; opacity: 0.65; }
+  .vision-card-content { max-width: 100%; }
 }
 
 /* =============================== TODAY SCREEN ============================== */
