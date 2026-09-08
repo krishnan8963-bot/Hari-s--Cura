@@ -854,6 +854,18 @@ function renderVisionScreen() {
   });
 }
 
+/** Tapping "Manifest" gives a brief golden glow flash on that card — a small, real bit of delight. */
+function setupVisionManifestButtons() {
+  document.querySelectorAll('[data-vision-manifest]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.vision-card');
+      if (!card) return;
+      card.classList.add('is-manifesting');
+      setTimeout(() => card.classList.remove('is-manifesting'), 700);
+    });
+  });
+}
+
 function renderMoreScreenState() {
   document.querySelectorAll('#theme-segmented button').forEach((b) => {
     b.classList.toggle('is-active', b.dataset.theme === State.settings.theme);
@@ -1452,6 +1464,7 @@ function setupEventListeners() {
   MoveModal.init();
   ShoppingModal.init();
   setupInstallBannerHandlers();
+  setupVisionManifestButtons();
 
   // Navigation (both sidebar and bottom nav share [data-screen] buttons)
   document.querySelectorAll('[data-screen]').forEach((btn) => {
