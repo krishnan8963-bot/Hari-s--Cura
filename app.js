@@ -850,7 +850,7 @@ function setupVisionManifestButtons() {
       const card = btn.closest('.vision-card');
       if (!card) return;
       card.classList.add('is-manifesting');
-      setTimeout(() => card.classList.remove('is-manifesting'), 4000);
+      setTimeout(() => card.classList.remove('is-manifesting'), 8000);
     });
   });
 }
