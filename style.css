@@ -313,7 +313,10 @@ a { color: inherit; }
   transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 .vision-card:hover, .vision-card:active { transform: translateY(-3px); }
+/* "Manifest" click feedback: a brief one-shot flash, only on the tapped
+   card. Not an ambient/looping effect — nothing animates until clicked. */
 .vision-card.is-manifesting { box-shadow: 0 0 56px 6px rgba(var(--vision-gold-glow), 0.55), 0 18px 40px rgba(0, 0, 0, 0.4); }
+.vision-card.is-manifesting .vision-card-title { animation: goldFlashOnce 700ms ease-in-out; }
 .vision-card:nth-child(1) { animation-delay: 0ms; }
 .vision-card:nth-child(2) { animation-delay: 90ms; }
 .vision-card:nth-child(3) { animation-delay: 180ms; }
@@ -347,19 +350,17 @@ a { color: inherit; }
 .vision-card-title {
   font-size: 12.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--vision-gold); margin: 4px 0 0;
-  animation: goldGlowPulse 2.6s ease-in-out infinite;
 }
 .vision-title-underline {
   display: block; width: 30px; height: 2px; margin-top: 7px; border-radius: 2px;
   background: linear-gradient(90deg, var(--vision-gold), transparent);
 }
-.vision-card:nth-child(1) .vision-card-title { animation-delay: 0.2s; }
-.vision-card:nth-child(2) .vision-card-title { animation-delay: 1.0s; }
-.vision-card:nth-child(3) .vision-card-title { animation-delay: 1.8s; }
 
-@keyframes goldGlowPulse {
-  0%, 100% { text-shadow: 0 0 0 rgba(var(--vision-gold-glow), 0); }
-  50% { text-shadow: 0 0 14px rgba(var(--vision-gold-glow), 0.65); }
+/* One-shot gold flash on the tapped card's title, then settles back to normal. */
+@keyframes goldFlashOnce {
+  0% { text-shadow: 0 0 0 rgba(var(--vision-gold-glow), 0); color: var(--vision-gold); }
+  40% { text-shadow: 0 0 20px rgba(var(--vision-gold-glow), 0.95); color: #FFE3A3; }
+  100% { text-shadow: 0 0 0 rgba(var(--vision-gold-glow), 0); color: var(--vision-gold); }
 }
 
 .vision-card-text {
