@@ -311,12 +311,17 @@ a { color: inherit; }
   display: flex; flex-direction: column; justify-content: flex-start;
   animation: visionCardIn var(--dur-slow) var(--ease) both;
   transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+  /* Keeps this card's own glow/paint effects from causing a visible
+     repaint "flicker" anywhere outside its own box — each card renders
+     and repaints fully independently of its siblings. */
+  contain: paint;
+  isolation: isolate;
 }
 .vision-card:hover, .vision-card:active { transform: translateY(-3px); }
 /* "Manifest" click feedback: a brief one-shot flash, only on the tapped
    card. Not an ambient/looping effect — nothing animates until clicked. */
-.vision-card.is-manifesting { box-shadow: 0 0 56px 6px rgba(var(--vision-gold-glow), 0.55), 0 18px 40px rgba(0, 0, 0, 0.4); }
-.vision-card.is-manifesting .vision-card-title { animation: goldFlashOnce 700ms ease-in-out; }
+.vision-card.is-manifesting { box-shadow: 0 0 32px 3px rgba(var(--vision-gold-glow), 0.5), 0 18px 40px rgba(0, 0, 0, 0.4); }
+.vision-card.is-manifesting .vision-card-title { animation: goldFlashOnce 2s ease-in-out; }
 .vision-card:nth-child(1) { animation-delay: 0ms; }
 .vision-card:nth-child(2) { animation-delay: 90ms; }
 .vision-card:nth-child(3) { animation-delay: 180ms; }
@@ -372,7 +377,7 @@ a { color: inherit; }
 /* The affirmation sentence flashes gold too on "Manifest," then eases back
    to its normal cream color — scoped to .is-manifesting so only the tapped
    card's own text is affected. */
-.vision-card.is-manifesting .vision-card-text { animation: goldFlashTextOnce 700ms ease-in-out; }
+.vision-card.is-manifesting .vision-card-text { animation: goldFlashTextOnce 2s ease-in-out; }
 @keyframes goldFlashTextOnce {
   0% { text-shadow: 0 0 0 rgba(var(--vision-gold-glow), 0); color: var(--vision-cream); }
   40% { text-shadow: 0 0 20px rgba(var(--vision-gold-glow), 0.95); color: #FFE3A3; }
