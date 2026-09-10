@@ -850,7 +850,7 @@ function setupVisionManifestButtons() {
       const card = btn.closest('.vision-card');
       if (!card) return;
       card.classList.add('is-manifesting');
-      setTimeout(() => card.classList.remove('is-manifesting'), 4000);
+      setTimeout(() => card.classList.remove('is-manifesting'), 2000);
     });
   });
 }
@@ -1423,8 +1423,14 @@ function setupEventListeners() {
   setupInstallBannerHandlers();
   setupVisionManifestButtons();
 
-  // Navigation (both sidebar and bottom nav share [data-screen] buttons)
-  document.querySelectorAll('[data-screen]').forEach((btn) => {
+  // Navigation (both sidebar and bottom nav share [data-screen] buttons).
+  // Scoped to .nav-item specifically — the <section data-screen="..."> wrappers
+  // for each screen ALSO carry a data-screen attribute (used elsewhere to show/
+  // hide them), so a bare `[data-screen]` selector here would incorrectly also
+  // attach a "switch to this screen" click handler to the screen's own root
+  // element — meaning any click bubbling up inside e.g. #screen-vision would
+  // re-trigger switchScreen('vision') and needlessly re-render/re-animate it.
+  document.querySelectorAll('.nav-item[data-screen]').forEach((btn) => {
     btn.addEventListener('click', () => switchScreen(btn.dataset.screen));
   });
 
