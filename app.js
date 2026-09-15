@@ -850,7 +850,7 @@ function setupVisionManifestButtons() {
       const card = btn.closest('.vision-card');
       if (!card) return;
       card.classList.add('is-manifesting');
-      setTimeout(() => card.classList.remove('is-manifesting'), 8000);
+      setTimeout(() => card.classList.remove('is-manifesting'), 2000);
     });
   });
 }
@@ -1444,6 +1444,11 @@ function setupEventListeners() {
     const shopBtn = e.target.closest('[data-action="open-add-shopping"]');
     if (shopBtn) ShoppingModal.openForCreate();
   });
+
+  // Add-item entry point for the Buy screen (a persistent header button,
+  // since the empty-state's "+ Add Item" button disappears once the list
+  // has any pending items — this is the only entry point once it's non-empty).
+  document.getElementById('buy-add-btn').addEventListener('click', () => ShoppingModal.openForCreate());
 
   // Today filter chips
   document.getElementById('today-filter-bar').addEventListener('click', (e) => {
