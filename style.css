@@ -214,6 +214,9 @@ a { color: inherit; }
 
 .screen-header { margin-bottom: 18px; }
 .screen-header h1 { font-size: 24px; letter-spacing: -0.02em; }
+.screen-header-row { display: flex; align-items: center; justify-content: space-between; }
+.screen-header-row h1 { margin: 0; }
+.screen-header-row .icon-btn { font-size: 22px; font-weight: 300; }
 
 /* ----------------------------- Sidebar (desktop) ---------------------------- */
 .sidebar { display: none; }
