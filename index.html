@@ -274,7 +274,7 @@
       <div id="willdo-empty-state" class="empty-state" hidden>
         <p class="empty-emoji">📌</p>
         <h3>Nothing on your list yet</h3>
-        <p>Add things you intend to do, tied to a date.</p>
+        <p>Add things you intend to do.</p>
         <button class="btn btn-primary" type="button" id="willdo-empty-add-btn">+ Add Item</button>
       </div>
     </section>
@@ -547,9 +547,6 @@
       <button class="icon-btn" id="willdo-modal-close-btn" type="button" aria-label="Close">✕</button>
     </div>
     <form id="willdo-form" class="sheet-body">
-      <label class="field-label" for="willdo-date-field">Date</label>
-      <input type="date" id="willdo-date-field" class="text-field" />
-
       <label class="field-label" for="willdo-item-field">Item <span class="required">*</span></label>
       <input type="text" id="willdo-item-field" class="text-field" placeholder="e.g. Call the plumber" maxlength="120" />
       <p class="field-error" id="willdo-item-error" hidden>Please enter an item.</p>
@@ -563,6 +560,47 @@
 
       <div class="sheet-actions">
         <button type="button" class="btn btn-ghost btn-block" id="willdo-done-btn">Done</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= EDIT WILL DO ITEM MODAL ================= -->
+<!-- Opened by tapping an item in the Will Do list. This is where its
+     sub-tasks (checklist, with checkboxes) and notes are managed — the
+     quick-add sheet above only ever handles the item's title. -->
+<div class="sheet-overlay" id="willdo-edit-modal-overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="willdo-edit-modal-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-header">
+      <h2 id="willdo-edit-modal-title">Edit Item</h2>
+      <button class="icon-btn" id="willdo-edit-modal-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <form id="willdo-edit-form" class="sheet-body">
+      <input type="hidden" id="willdo-edit-id-field" />
+
+      <label class="field-label" for="willdo-edit-title-field">Item <span class="required">*</span></label>
+      <input type="text" id="willdo-edit-title-field" class="text-field" maxlength="120" />
+      <p class="field-error" id="willdo-edit-title-error" hidden>Please enter an item.</p>
+
+      <label class="field-label">Checklist</label>
+      <div class="checklist-builder">
+        <ul class="checklist-items" id="willdo-edit-checklist-items"></ul>
+        <div class="checklist-add-row">
+          <input type="text" id="willdo-edit-checklist-new-item-field" class="text-field" placeholder="Add a sub-task…" maxlength="120" />
+          <button type="button" class="btn btn-secondary btn-sm" id="willdo-edit-checklist-add-btn">Add</button>
+        </div>
+      </div>
+
+      <label class="field-label" for="willdo-edit-notes-field">Notes</label>
+      <textarea id="willdo-edit-notes-field" class="text-field textarea-field" placeholder="Optional notes" rows="3" maxlength="500"></textarea>
+
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-ghost btn-block" id="willdo-edit-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-block" id="willdo-edit-save-btn">Save</button>
+      </div>
+      <div class="sheet-secondary-actions">
+        <button type="button" class="link-btn danger-link" id="willdo-edit-delete-btn">Delete Item</button>
       </div>
     </form>
   </div>
