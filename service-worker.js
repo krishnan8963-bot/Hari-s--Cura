@@ -31,7 +31,7 @@
  * reset button for stuck devices.
  */
 
-const CACHE_NAME = 'haris-cura-v5';
+const CACHE_NAME = 'haris-cura-v6';
 const APP_SHELL = [
   './',
   './index.html',
