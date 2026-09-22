@@ -599,19 +599,24 @@ function renderPlannerScreen() {
 /* ============================================================================
    WILL DO SCREEN
    ============================================================================ */
-function willDoDateLabel(dateKey) {
-  const todayKey = DateUtil.todayKey();
-  if (dateKey === todayKey) return 'Today';
-  if (dateKey === DateUtil.addDays(todayKey, 1)) return 'Tomorrow';
-  if (dateKey === DateUtil.addDays(todayKey, -1)) return 'Yesterday';
-  return DateUtil.formatFriendly(dateKey);
-}
-
 function buildWillDoItemHTML(item) {
+  const checklist = item.checklist || [];
+  const checklistDone = checklist.filter((i) => i.completed).length;
+  const checklistBadge = checklist.length
+    ? `<span class="task-meta-item checklist-badge">☑️ ${checklistDone}/${checklist.length}</span>`
+    : '';
+  const notesBadge = (item.notes || '').trim() ? '<span class="task-meta-item" title="Has notes">📝</span>' : '';
+  const metaRow = (checklistBadge || notesBadge)
+    ? `<div class="task-meta">${checklistBadge}${notesBadge}</div>`
+    : '';
+
   return `
-    <div class="willdo-item-card ${item.completed ? 'is-completed' : ''}" data-willdo-id="${item.id}">
+    <div class="willdo-item-card ${item.completed ? 'is-completed' : ''}" data-willdo-id="${item.id}" role="button" tabindex="0" aria-label="${escapeAttr(item.text)}">
       <button class="task-checkbox" data-action="toggle-willdo" aria-label="${item.completed ? 'Mark not done' : 'Mark done'}">${item.completed ? '✓' : ''}</button>
-      <span class="willdo-item-text">${escapeHTML(item.text)}</span>
+      <div class="willdo-item-body">
+        <span class="willdo-item-text">${escapeHTML(item.text)}</span>
+        ${metaRow}
+      </div>
       <button class="willdo-item-remove" type="button" data-action="remove-willdo" aria-label="Remove item">✕</button>
     </div>`;
 }
@@ -629,25 +634,14 @@ function renderWillDoScreen() {
   emptyEl.hidden = true;
   container.hidden = false;
 
-  const sorted = [...State.willDoItems].sort((a, b) =>
-    (a.date || '').localeCompare(b.date || '') || (a.createdAt || '').localeCompare(b.createdAt || '')
-  );
-  const groups = [];
-  const groupIndexByDate = new Map();
-  sorted.forEach((item) => {
-    const key = item.date || '';
-    if (!groupIndexByDate.has(key)) {
-      groupIndexByDate.set(key, groups.length);
-      groups.push({ date: key, items: [] });
-    }
-    groups[groupIndexByDate.get(key)].items.push(item);
+  // Just one simple list — pending items first (creation order), completed
+  // ones sink to the bottom rather than being grouped away.
+  const sorted = [...State.willDoItems].sort((a, b) => {
+    if (a.completed !== b.completed) return a.completed ? 1 : -1;
+    return (a.createdAt || '').localeCompare(b.createdAt || '');
   });
 
-  container.innerHTML = groups.map((group) => `
-    <div class="task-group">
-      <p class="task-group-title">${escapeHTML(group.date ? willDoDateLabel(group.date) : 'No date')}</p>
-      <div class="task-list">${group.items.map(buildWillDoItemHTML).join('')}</div>
-    </div>`).join('');
+  container.innerHTML = `<div class="task-list">${sorted.map(buildWillDoItemHTML).join('')}</div>`;
 }
 
 async function handleToggleWillDoItem(id) {
@@ -659,9 +653,15 @@ async function handleToggleWillDoItem(id) {
   renderCurrentScreen();
 }
 
-async function handleRemoveWillDoItem(id) {
+async function removeWillDoItemCore(id) {
   await DB.WillDo.remove(id);
   State.willDoItems = State.willDoItems.filter((w) => w.id !== id);
+}
+
+/** Quick inline removal from the main list row — no confirmation, matching
+ * the same no-confirm precedent already used for checklist sub-items. */
+async function handleRemoveWillDoItem(id) {
+  await removeWillDoItemCore(id);
   renderCurrentScreen();
   if (!WillDoModal.overlay.hidden) WillDoModal.renderSessionList();
 }
@@ -671,6 +671,8 @@ async function handleRemoveWillDoItem(id) {
  * this form does NOT close it — it saves the item immediately, appends it
  * to the "Added so far" preview, clears just the text field, and keeps
  * focus there, so several items can be added back-to-back in one sitting.
+ * This sheet only ever handles an item's title — its checklist and notes
+ * are managed afterward via WillDoEditModal (tap the item to open it).
  */
 const WillDoModal = {
   overlay: null,
@@ -680,7 +682,6 @@ const WillDoModal = {
   },
   open() {
     this.sessionIds = [];
-    document.getElementById('willdo-date-field').value = DateUtil.todayKey();
     document.getElementById('willdo-item-field').value = '';
     document.getElementById('willdo-item-error').hidden = true;
     this.renderSessionList();
@@ -701,7 +702,7 @@ const WillDoModal = {
     }
     list.innerHTML = items.map((item) => `
       <li class="checklist-item" data-item-id="${item.id}">
-        <span class="checklist-item-text">${escapeHTML(item.text)} — ${DateUtil.formatShort(item.date)}</span>
+        <span class="checklist-item-text">${escapeHTML(item.text)}</span>
         <button type="button" class="checklist-item-remove" data-action="remove-willdo-session-item" aria-label="Remove item">✕</button>
       </li>`).join('');
   },
@@ -718,12 +719,12 @@ async function handleWillDoFormSubmit(e) {
   }
   document.getElementById('willdo-item-error').hidden = true;
 
-  const date = document.getElementById('willdo-date-field').value || DateUtil.todayKey();
   const now = new Date().toISOString();
   const item = {
     id: DB.WillDo.newId(),
     text,
-    date,
+    notes: '',
+    checklist: [],
     completed: false,
     completedAt: null,
     createdAt: now,
@@ -737,6 +738,98 @@ async function handleWillDoFormSubmit(e) {
   textField.focus();
   renderCurrentScreen();
   Toast.show('Added to Will Do');
+}
+
+/**
+ * Edit sheet for a single Will Do item — opened by tapping it in the list.
+ * This is where its checklist (sub-tasks, with checkboxes) and notes are
+ * managed, plus its title and deletion.
+ */
+const WillDoEditModal = {
+  overlay: null,
+  editingId: null,
+  checklistDraft: [],
+  init() {
+    this.overlay = document.getElementById('willdo-edit-modal-overlay');
+  },
+  open(item) {
+    this.editingId = item.id;
+    document.getElementById('willdo-edit-id-field').value = item.id;
+    document.getElementById('willdo-edit-title-field').value = item.text || '';
+    document.getElementById('willdo-edit-title-error').hidden = true;
+    document.getElementById('willdo-edit-notes-field').value = item.notes || '';
+    document.getElementById('willdo-edit-checklist-new-item-field').value = '';
+    this.checklistDraft = (item.checklist || []).map((c) => ({ ...c }));
+    this.renderChecklist();
+    this.overlay.hidden = false;
+    setTimeout(() => document.getElementById('willdo-edit-title-field').focus(), 50);
+  },
+  hide() {
+    this.overlay.hidden = true;
+  },
+  addChecklistItem(text) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    this.checklistDraft.push({ id: newChecklistItemId(), text: trimmed, completed: false });
+    this.renderChecklist();
+  },
+  toggleChecklistItem(itemId) {
+    const item = this.checklistDraft.find((i) => i.id === itemId);
+    if (item) item.completed = !item.completed;
+    this.renderChecklist();
+  },
+  removeChecklistItem(itemId) {
+    this.checklistDraft = this.checklistDraft.filter((i) => i.id !== itemId);
+    this.renderChecklist();
+  },
+  renderChecklist() {
+    const list = document.getElementById('willdo-edit-checklist-items');
+    if (this.checklistDraft.length === 0) {
+      list.innerHTML = '<li class="checklist-empty">No sub-tasks yet.</li>';
+      return;
+    }
+    list.innerHTML = this.checklistDraft.map((item) => `
+      <li class="checklist-item ${item.completed ? 'is-completed' : ''}" data-item-id="${item.id}">
+        <button type="button" class="checklist-item-checkbox" data-action="toggle-willdo-edit-checklist-item" aria-label="${item.completed ? 'Mark not done' : 'Mark done'}">${item.completed ? '✓' : ''}</button>
+        <span class="checklist-item-text">${escapeHTML(item.text)}</span>
+        <button type="button" class="checklist-item-remove" data-action="remove-willdo-edit-checklist-item" aria-label="Remove item">✕</button>
+      </li>`).join('');
+  },
+};
+
+async function handleWillDoEditFormSubmit(e) {
+  e.preventDefault();
+  const titleField = document.getElementById('willdo-edit-title-field');
+  const text = titleField.value.trim();
+  if (!text) {
+    document.getElementById('willdo-edit-title-error').hidden = false;
+    titleField.focus();
+    return;
+  }
+  document.getElementById('willdo-edit-title-error').hidden = true;
+
+  const id = document.getElementById('willdo-edit-id-field').value;
+  const existing = State.willDoItems.find((w) => w.id === id);
+  if (!existing) return;
+
+  existing.text = text;
+  existing.notes = document.getElementById('willdo-edit-notes-field').value.trim();
+  existing.checklist = WillDoEditModal.checklistDraft.map((item) => ({ ...item }));
+
+  await DB.WillDo.save(existing);
+  WillDoEditModal.hide();
+  Toast.show('Changes saved');
+  renderCurrentScreen();
+}
+
+async function handleDeleteWillDoItemFromEdit() {
+  const id = document.getElementById('willdo-edit-id-field').value;
+  const confirmed = await Confirm.ask('Delete this item?', 'This will permanently remove it and its checklist. This action cannot be undone.');
+  if (!confirmed) return;
+  await removeWillDoItemCore(id);
+  WillDoEditModal.hide();
+  Toast.show('Item deleted');
+  renderCurrentScreen();
 }
 
 /* ============================================================================
@@ -1581,6 +1674,7 @@ function setupEventListeners() {
   MoveModal.init();
   ShoppingModal.init();
   WillDoModal.init();
+  WillDoEditModal.init();
   setupInstallBannerHandlers();
   setupVisionManifestButtons();
 
@@ -1626,6 +1720,36 @@ function setupEventListeners() {
     if (!btn) return;
     const li = btn.closest('[data-item-id]');
     handleRemoveWillDoItem(li.dataset.itemId);
+  });
+
+  // Will Do: edit sheet (title, checklist/sub-tasks, notes, delete)
+  document.getElementById('willdo-edit-form').addEventListener('submit', handleWillDoEditFormSubmit);
+  document.getElementById('willdo-edit-cancel-btn').addEventListener('click', () => WillDoEditModal.hide());
+  document.getElementById('willdo-edit-modal-close-btn').addEventListener('click', () => WillDoEditModal.hide());
+  document.getElementById('willdo-edit-modal-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'willdo-edit-modal-overlay') WillDoEditModal.hide();
+  });
+  document.getElementById('willdo-edit-delete-btn').addEventListener('click', handleDeleteWillDoItemFromEdit);
+  document.getElementById('willdo-edit-checklist-add-btn').addEventListener('click', () => {
+    const field = document.getElementById('willdo-edit-checklist-new-item-field');
+    WillDoEditModal.addChecklistItem(field.value);
+    field.value = '';
+    field.focus();
+  });
+  document.getElementById('willdo-edit-checklist-new-item-field').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault(); // don't submit the whole edit form on Enter
+    document.getElementById('willdo-edit-checklist-add-btn').click();
+  });
+  document.getElementById('willdo-edit-checklist-items').addEventListener('click', (e) => {
+    const row = e.target.closest('.checklist-item');
+    if (!row) return;
+    const itemId = row.dataset.itemId;
+    if (e.target.closest('[data-action="toggle-willdo-edit-checklist-item"]')) {
+      WillDoEditModal.toggleChecklistItem(itemId);
+    } else if (e.target.closest('[data-action="remove-willdo-edit-checklist-item"]')) {
+      WillDoEditModal.removeChecklistItem(itemId);
+    }
   });
 
   // Today filter chips
@@ -1678,6 +1802,12 @@ function setupEventListeners() {
     if (shopCard && shopCard.dataset.shopId) {
       const item = State.shopping.find((s) => s.id === shopCard.dataset.shopId);
       if (item) ShoppingModal.openForEdit(item);
+      return;
+    }
+    const willdoCard = e.target.closest('.willdo-item-card');
+    if (willdoCard && willdoCard.dataset.willdoId) {
+      const item = State.willDoItems.find((w) => w.id === willdoCard.dataset.willdoId);
+      if (item) WillDoEditModal.open(item);
     }
   });
 
@@ -1882,6 +2012,7 @@ function setupEventListeners() {
     if (!MoveModal.overlay.hidden) MoveModal.hide();
     if (!ShoppingModal.overlay.hidden) ShoppingModal.hide();
     if (!WillDoModal.overlay.hidden) WillDoModal.hide();
+    if (!WillDoEditModal.overlay.hidden) WillDoEditModal.hide();
     const searchOverlay = document.getElementById('search-overlay');
     if (!searchOverlay.hidden) searchOverlay.hidden = true;
   });
@@ -1916,6 +2047,7 @@ window.TaskLogic = TaskLogic;
 window.TaskModal = TaskModal;
 window.ShoppingModal = ShoppingModal;
 window.WillDoModal = WillDoModal;
+window.WillDoEditModal = WillDoEditModal;
 window.MoveModal = MoveModal;
 window.switchScreen = switchScreen;
 window.renderPlannerScreen = renderPlannerScreen;
