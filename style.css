@@ -602,12 +602,13 @@ a { color: inherit; }
 
 /* ------------------------------- Will Do list ------------------------------- */
 .willdo-item-card {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
   background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--r-md);
   padding: 13px 14px; animation: taskIn var(--dur-med) var(--ease);
 }
 .willdo-item-card.is-removing { opacity: 0; transform: translateX(24px) scale(0.97); transition: all var(--dur-med) var(--ease); }
-.willdo-item-text { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: var(--text-primary); word-break: break-word; }
+.willdo-item-body { flex: 1; min-width: 0; }
+.willdo-item-text { font-size: 15px; font-weight: 600; color: var(--text-primary); word-break: break-word; }
 .willdo-item-card.is-completed .willdo-item-text { color: var(--text-tertiary); text-decoration: line-through; }
 .willdo-item-remove {
   border: none; background: transparent; color: var(--text-tertiary); cursor: pointer;
